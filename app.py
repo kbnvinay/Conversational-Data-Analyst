@@ -15,7 +15,7 @@ import json
 # ─────────────────────────────────────────────
 st.set_page_config(
     page_title="Conversational Data Analyst using RAG",
-    page_icon="🧠",
+    page_icon=" ",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -415,15 +415,15 @@ def call_claude(api_key: str, system_prompt: str, user_prompt: str) -> str:
         if response.status_code == 200:
             return response.json()["content"][0]["text"].strip()
         elif response.status_code == 401:
-            return "⚠️ Invalid API key. Please check your Anthropic API key in the sidebar."
+            return " Invalid API key. Please check your Anthropic API key in the sidebar."
         elif response.status_code == 429:
-            return "⚠️ Rate limit hit. Please wait a moment and try again."
+            return " Rate limit hit. Please wait a moment and try again."
         else:
-            return f"⚠️ API error {response.status_code}. Using pandas answer as fallback."
+            return f" API error {response.status_code}. Using pandas answer as fallback."
     except requests.exceptions.Timeout:
-        return "⚠️ Request timed out. Check your internet connection."
+        return " Request timed out. Check your internet connection."
     except Exception as e:
-        return f"⚠️ Could not reach Claude API: {str(e)}"
+        return f" Could not reach Claude API: {str(e)}"
 
 
 def build_rag_prompt(question: str, retrieved_df: pd.DataFrame,
@@ -488,9 +488,9 @@ def generate_answer(question: str, df: pd.DataFrame,
     if intent == "summary":
         return (
             f"Your dataset has **{len(df):,} rows** and **{len(df.columns)} columns**.\n\n"
-            f"📐 **Numeric columns** ({len(num_cols)}): {', '.join(num_cols) or '—'}\n\n"
-            f"🏷️ **Categorical columns** ({len(cat_cols)}): {', '.join(cat_cols) or '—'}\n\n"
-            f"🔍 **Missing values**: {df.isnull().sum().sum()} total across all columns.",
+            f" **Numeric columns** ({len(num_cols)}): {', '.join(num_cols) or '—'}\n\n"
+            f" **Categorical columns** ({len(cat_cols)}): {', '.join(cat_cols) or '—'}\n\n"
+            f" **Missing values**: {df.isnull().sum().sum()} total across all columns.",
             intent,
         )
 
@@ -498,12 +498,12 @@ def generate_answer(question: str, df: pd.DataFrame,
     grp_col = find_group_column(question, df)
 
     if not val_col or val_col not in df.columns:
-        return "⚠️ I couldn't identify a relevant numeric column for your question. Try rephrasing.", intent
+        return " I couldn't identify a relevant numeric column for your question. Try rephrasing.", intent
 
     # Force the value column to numeric to avoid 'f' format errors on strings
     series = to_numeric_col(df, val_col).dropna()
     if series.empty:
-        return f"⚠️ Column **{val_col}** doesn't appear to contain numeric data.", intent
+        return f" Column **{val_col}** doesn't appear to contain numeric data.", intent
 
     # ── MAX ───────────────────────────────────
     if intent == "max":
@@ -513,11 +513,11 @@ def generate_answer(question: str, df: pd.DataFrame,
             )
             winner = grouped.idxmax()
             return (
-                f"🏆 **{winner}** has the highest **{val_col}** with a total of "
+                f" **{winner}** has the highest **{val_col}** with a total of "
                 f"**{fmt(grouped.max())}** (out of {len(grouped)} groups).",
                 intent,
             )
-        return f"📈 The maximum **{val_col}** is **{fmt(series.max())}**.", intent
+        return f" The maximum **{val_col}** is **{fmt(series.max())}**.", intent
 
     # ── MIN ───────────────────────────────────
     if intent == "min":
@@ -527,11 +527,11 @@ def generate_answer(question: str, df: pd.DataFrame,
             )
             loser = grouped.idxmin()
             return (
-                f"📉 **{loser}** has the lowest **{val_col}** with a total of "
+                f" **{loser}** has the lowest **{val_col}** with a total of "
                 f"**{fmt(grouped.min())}** (out of {len(grouped)} groups).",
                 intent,
             )
-        return f"📉 The minimum **{val_col}** is **{fmt(series.min())}**.", intent
+        return f" The minimum **{val_col}** is **{fmt(series.min())}**.", intent
 
     # ── SUM ───────────────────────────────────
     if intent == "sum":
@@ -541,11 +541,11 @@ def generate_answer(question: str, df: pd.DataFrame,
                 lambda x: pd.to_numeric(x, errors="coerce").sum()
             )
             return (
-                f"➕ Total **{val_col}** is **{fmt(total)}**.\n\n"
+                f" Total **{val_col}** is **{fmt(total)}**.\n\n"
                 f"Top contributor: **{grouped.idxmax()}** ({fmt(grouped.max())})",
                 intent,
             )
-        return f"➕ Total **{val_col}** across all records: **{fmt(total)}**.", intent
+        return f" Total **{val_col}** across all records: **{fmt(total)}**.", intent
 
     # ── AVG ───────────────────────────────────
     if intent == "avg":
@@ -555,23 +555,23 @@ def generate_answer(question: str, df: pd.DataFrame,
                 lambda x: pd.to_numeric(x, errors="coerce").mean()
             )
             return (
-                f"📊 Overall average **{val_col}** is **{fmt(avg)}**.\n\n"
+                f" Overall average **{val_col}** is **{fmt(avg)}**.\n\n"
                 f"Highest average: **{grouped.idxmax()}** ({fmt(grouped.max())}) | "
                 f"Lowest: **{grouped.idxmin()}** ({fmt(grouped.min())})",
                 intent,
             )
-        return f"📊 Average **{val_col}**: **{fmt(avg)}** (median: {fmt(series.median())})", intent
+        return f" Average **{val_col}**: **{fmt(avg)}** (median: {fmt(series.median())})", intent
 
     # ── COUNT ─────────────────────────────────
     if intent == "count":
         if grp_col and grp_col in df.columns:
             counts = df[grp_col].value_counts()
             return (
-                f"🔢 Total records: **{len(df):,}**.\n\n"
+                f" Total records: **{len(df):,}**.\n\n"
                 f"Most frequent **{grp_col}**: **{counts.index[0]}** ({counts.iloc[0]} times)",
                 intent,
             )
-        return f"🔢 Dataset contains **{len(df):,}** records.", intent
+        return f" Dataset contains **{len(df):,}** records.", intent
 
     # ── COMPARE / TREND / CORRELATION / DISTRIBUTION / GENERAL ──
     if intent in ("compare", "trend", "correlation", "distribution", "general"):
@@ -582,12 +582,12 @@ def generate_answer(question: str, df: pd.DataFrame,
             top3 = grouped.head(3)
             lines = "\n".join([f"  • **{k}**: {fmt(v)}" for k, v in top3.items()])
             return (
-                f"📊 **{val_col}** breakdown by **{grp_col}** (top 3):\n{lines}",
+                f" **{val_col}** breakdown by **{grp_col}** (top 3):\n{lines}",
                 intent,
             )
         return f"Here is the distribution of **{val_col}** in your dataset.", intent
 
-    return "🤔 I couldn't interpret this question. Try asking about totals, averages, highest, lowest, or comparisons.", intent
+    return " I couldn't interpret this question. Try asking about totals, averages, highest, lowest, or comparisons.", intent
 
 
 # ─────────────────────────────────────────────
@@ -811,7 +811,7 @@ def generate_charts(df: pd.DataFrame, question: str, intent: str) -> list:
 with st.sidebar:
     st.markdown("""
     <div style='text-align:center; padding: 1rem 0 1.5rem;'>
-        <div style='font-size:2.5rem;'>🧠</div>
+        <div style='font-size:2.5rem;'> </div>
         <div style='font-size:0.95rem; font-weight:700; color:#e8eaf0; line-height:1.4;'>Conversational Data Analyst</div>
         <div style='font-size:0.72rem; color:#4a5568; margin-top:4px; letter-spacing:0.05em;'>using RAG</div>
     </div>
@@ -832,7 +832,7 @@ with st.sidebar:
                     unsafe_allow_html=True)
 
     st.markdown("---")
-    st.markdown("#### 🔑 Claude API Key")
+    st.markdown("####  Claude API Key")
     api_key = st.text_input(
         "Anthropic API Key",
         type="password",
@@ -844,13 +844,13 @@ with st.sidebar:
     if api_key:
         st.markdown("""
         <div style='color:#68d391; font-size:0.78rem; padding: 4px 0;'>
-        ✅ API key set — Claude will generate answers
+         API key set — Claude will generate answers
         </div>
         """, unsafe_allow_html=True)
     else:
         st.markdown("""
         <div style='color:#f6ad55; font-size:0.78rem; padding: 4px 0;'>
-        ⚠️ No key — using pandas answers only<br>
+         No key — using pandas answers only<br>
         Get free key: console.anthropic.com
         </div>
         """, unsafe_allow_html=True)
@@ -913,7 +913,7 @@ if uploaded:
     st.markdown(cards_html, unsafe_allow_html=True)
 
     # ── Preview ──
-    st.markdown('<div class="section-header">📋 Dataset Preview</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header"> Dataset Preview</div>', unsafe_allow_html=True)
     st.dataframe(df.head(10), use_container_width=True)
 
     # ── Build FAISS index ──
@@ -947,7 +947,7 @@ if uploaded:
         # ── STEP 3: Feed context + retrieved rows to Claude (real RAG generation) ──
         api_key = st.session_state.get("api_key_input", "")
         if api_key and api_key.strip().startswith("sk-ant"):
-            with st.spinner("🤖 Claude is reading your data…"):
+            with st.spinner(" Claude is reading your data…"):
                 system_prompt, user_prompt = build_rag_prompt(
                     question, retrieved_df, pandas_answer, df
                 )
@@ -973,7 +973,7 @@ if uploaded:
             "padding:2px 8px;border-radius:20px;font-weight:600;'>"
             f"✦ {answer_source}</span>"
         )
-        st.markdown('<div class="section-header">🤖 AI Answer</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header"> AI Answer</div>', unsafe_allow_html=True)
         st.markdown(
             f'<div class="answer-box">{source_badge}<br><br>{final_answer}</div>',
             unsafe_allow_html=True,
@@ -985,7 +985,7 @@ if uploaded:
             st.dataframe(retrieved_df, use_container_width=True)
 
         # ── Charts ──
-        st.markdown('<div class="section-header">📈 Visual Analysis</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header"> Visual Analysis</div>', unsafe_allow_html=True)
         charts = generate_charts(df, question, intent)
 
         if charts:
@@ -1004,13 +1004,13 @@ if uploaded:
 
         # ── Summary stats (if summary intent) ──
         if intent == "summary":
-            st.markdown('<div class="section-header">📊 Detailed Statistics</div>',
+            st.markdown('<div class="section-header"> Detailed Statistics</div>',
                         unsafe_allow_html=True)
             st.dataframe(df.describe().T, use_container_width=True)
 
     # ── Chat History ──
     if st.session_state.chat_history:
-        st.markdown('<div class="section-header">🗂️ Conversation History</div>',
+        st.markdown('<div class="section-header"> Conversation History</div>',
                     unsafe_allow_html=True)
         for entry in reversed(st.session_state.chat_history[-6:]):
             st.markdown(
@@ -1018,7 +1018,7 @@ if uploaded:
                 unsafe_allow_html=True,
             )
             st.markdown(
-                f'<div class="chat-ai">🤖 {entry["answer"]}</div>',
+                f'<div class="chat-ai"> {entry["answer"]}</div>',
                 unsafe_allow_html=True,
             )
 
