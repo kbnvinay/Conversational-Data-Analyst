@@ -1030,7 +1030,7 @@ else:
     # ── Empty state ──
     st.markdown("""
     <div style='text-align:center; padding: 4rem 2rem; color: #2d3748;'>
-        <div style='font-size:4rem; margin-bottom:1rem;'>📂</div>
+        <div style='font-size:4rem; margin-bottom:1rem;'> </div>
         <div style='font-size:1.2rem; font-weight:600; color:#3d4a5c; margin-bottom:0.5rem;'>
             No dataset loaded
         </div>
